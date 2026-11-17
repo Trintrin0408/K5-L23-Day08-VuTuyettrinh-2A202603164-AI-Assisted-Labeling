@@ -6,14 +6,21 @@
 
 | Lớp | Model + cỡ | Ngưỡng | Vì sao (dẫn `run_id` trong `model_log.csv`) |
 |---|---|---|---|
-| person / bicycle / motorbike / car / bus / truck | <<YOLO26m>> | <<theo lớp, từ threshold_sweep>> | <<>> |
-| three_wheeler | <<YOLOE-26s, prompt: ...>> | <<>> | <<>> |
+| motorbike | YOLO26m | **0.1** | `threshold_sweep`: ở 0.1 bắt 14/15 xe máy gold (recall 93%, precision 70%); lên 0.3 chỉ còn 10/15. Tôi chấp nhận 6 box thừa phải xoá để không sót xe máy. Pilot (`r02`): xe máy thật phần lớn nhận đúng |
+| person | YOLO26m | 0.3 (mặc định) | Không ngưỡng nào ≤ 0.5 đạt recall 90%: tối đa 20/28 = 71% ở 0.1–0.15. Hạ từ 0.3 xuống 0.15 chỉ thêm 2 người (18→20/28) mà thêm 4 box thừa (8→12), nên giữ 0.3; người bị sót phải tự vẽ khi review |
+| car | YOLO26m | 0.3 (mặc định) | Recall đứng yên 8/9 = 89% từ 0.1 đến 0.5 (chưa đạt 90%), chỉ 9 vật nên không chọn ngưỡng riêng |
+| bicycle / truck / bus | YOLO26m | 0.3 (mặc định) | Quá ít vật trong gold (2 / 1 / 0, < 5) để chọn ngưỡng riêng. Pilot (`r02`): xe đạp, xe tải, xe buýt thật nhận đúng nhưng YOLO26 gọi xích lô là bicycle (img_032) và gọi xe xanh img_011 (theo tôi là car) là truck → kiểm kỹ khi review |
+| three_wheeler | YOLOE-26s-seg, prompt: "tuk-tuk", "cyclo", "cargo tricycle" | **0.15** | `threshold_sweep`: ở 0.15 bắt 7/7 xe ba bánh gold (recall 100%, precision 78%); lên 0.3 sót 2/7. YOLO26 không có lớp này, không lần nào ra three_wheeler (`r02`); YOLOE pilot đúng 5/8 box (`r04`) |
 
+- Chuỗi ngưỡng dùng ở Part 4: `--thr "motorbike=0.1,three_wheeler=0.15"` (lớp khác dùng `--conf 0.3`)
 - Lệnh `merge_prelabels.py` đã dùng (dán nguyên): <<>>
-- **Phiên bản SAM bạn chọn** (SAM 1 / 2.1 / 3) và lý do: <<chất lượng mask, tốc độ, RAM, quyền truy cập>>
-- Lỗi nào **không sửa được bằng đổi ngưỡng** (ví dụ tuk-tuk bị gọi `car`)? Sửa thế nào? <<>>
-- Box **điểm cao mà sai** hoặc **điểm thấp mà đúng** (ảnh nào): <<>>
-- Giới hạn: chọn ngưỡng trên chính gold (4 ảnh) nên số đo máy trên gold là lạc quan: <<>>
+- **Phiên bản SAM bạn chọn:** SAM 2.1 base (`sam2.1_b.pt`) — bản bài khuyến nghị, chạy được trên CPU (4.45 s/ảnh, `r05`), máy RAM 15.5 GB đủ chạy; không dùng SAM 3 vì cần quyền truy cập và GPU. Mask từ box máy có lỗi (dính người ngồi trên xe, lệch/thủng ở tuk-tuk img_013, box sai thì mask sai theo) nên Part 5 dùng click điểm.
+- Lỗi **không sửa được bằng đổi ngưỡng**:
+  - Sai lớp xe ba bánh: img_032 xích lô bị YOLO26 gọi bicycle; img_013 tuk-tuk bị gọi car; nâng ngưỡng 0.25 → 0.5 (`r02` → `r03`) thì img_032 vẫn sai lớp, img_007 xích lô chỉ đổi từ sai lớp (motorbike) thành mất box. Sửa bằng model khác: YOLOE cho three_wheeler.
+  - Bỏ sót: person tối đa 20/28 dù hạ ngưỡng; img_007 xích lô bị cả YOLO26 (ở 0.5) và YOLOE (0 box) bỏ sót. Chỉ sửa được bằng người review tự quét ảnh và vẽ thêm.
+  - YOLOE nhận nhầm xe 4 bánh thành three_wheeler (img_011, img_002: 3/8 box pilot, `r04`) → kiểm khi review.
+- Box **điểm cao mà sai**: img_011 xe xanh (theo tôi là car) bị YOLO26 gọi truck với conf 0.77. Điểm cao không có nghĩa là đúng.
+- Giới hạn: ngưỡng được chọn và chấm trên chính 4 ảnh gold, nên precision / recall của máy trên gold ở ngưỡng đã chọn là **lạc quan**. Mẫu nhỏ: three_wheeler 7 vật, car 9, motorbike 15 → ngưỡng chỉ là ước lượng thô; bicycle / truck / bus không đủ vật để chọn.
 
 ## 2. AI error profile (từ `qc/review_stats.md`)
 
