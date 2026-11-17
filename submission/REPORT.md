@@ -1,4 +1,4 @@
-# Báo cáo Day 08 — <<MSHV - Họ và tên>>
+# Báo cáo Day 08 — 2A202603164 - Vũ Tuyết Trinh
 
 > Một file duy nhất cho cả bài (đã gộp recipe, QC và ghi chú cá nhân). Mọi con số kèm **mẫu số** và nguồn (file nào). Viết bằng lời của bạn.
 
@@ -68,6 +68,10 @@
 Nếu Rework / Hold, việc cần làm tiếp: <<>>
 
 ## 8. Ghi chú cá nhân
+
+- **Ca khó khi gán gold** (box tick `can_review` trong `labels/gold_manual.json`, id theo file export):
+  - `img_020` box #55, #56 (`person`, cao 13.7 px và 14.4 px): người nhỏ hơn 20 px, chỉ lộ phần đầu nhưng nhìn thấy rõ. Phân vân giữa quy tắc 4.1.6 (cao < 20 px thì không vẽ, chỉ dùng `ignore_region` khi cụm ≥ 5 vật) và việc vật vẫn nhận ra rõ ràng là người; chỉ có 2 người nên không đủ thành cụm.
+  - `img_001` box #12 (`person`, cao 25 px): không chắc là người, chỉ thấy một bóng đen.
 
 - **Dùng AI để làm bài** (công cụ nào, việc gì, kiểm tra thế nào; "không dùng" nếu không): <<>>
 - Gold có bị nhiễm không (bạn có nhìn pre-label hay hỏi AI trước khi gán xong)? <<không / có, như sau: ...>>
