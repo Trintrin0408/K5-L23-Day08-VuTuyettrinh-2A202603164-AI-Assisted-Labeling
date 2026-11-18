@@ -28,29 +28,55 @@
 
 ## 2. AI error profile (từ `qc/review_stats.md`)
 
+Số của nhãn cuối (`qc/review_stats.md`; đã loại 24 đối tượng quanh bẫy khỏi bảng):
+
 | Trạng thái | Số | Tỉ lệ | Mẫu số |
 |---|---|---|---|
-| accepted | <<>> | <<>> | <<box máy>> |
-| edited | <<>> | <<>> | <<>> |
-| deleted | <<>> | <<>> | <<>> |
-| added | <<>> | <<>> | <<đối tượng sau duyệt>> |
+| accepted | 593 | 593/621 = 95.5% | 621 box máy |
+| edited | 6 | 6/621 = 1.0% | 621 box máy |
+| deleted | 20 | 20/621 = 3.2% | 621 box máy |
+| added | 8 | 8/607 = 1.3% | 607 đối tượng sau duyệt |
 
-- Lớp nào máy tệ nhất? Vì sao (dẫn ảnh)? <<>>
-- So với gold: precision / recall của **máy** <<>> (mẫu số: <<đối tượng gold>>)
+Trong deleted + added có 4 ca đổi lớp (box đúng chỗ, sai lớp), nên số vật máy sót thật khoảng 8 − 4 = 4. Số của lượt duyệt đầu (`qc/review_stats_round1.md`) gần như giống hệt: accepted 596/621 = 96.0%, deleted 17/621, added 7/609.
+
+- **Lớp máy tệ nhất: `three_wheeler`.** Có 41 box máy, bị xoá 9/41 = 22% và sửa 3/41; trong khi `motorbike` chỉ bị xoá 7/238 = 2.9% và `person` 2/270 = 0.7%. Lỗi theo hai chiều:
+  - YOLOE gán `three_wheeler` thừa hoặc sai lên xe máy, xe 4 bánh (img_009, img_010, img_014: xoá 5 box; img_009 đổi 1 `three_wheeler` → `motorbike`; img_027, img_035 cũng có sửa box `three_wheeler`).
+  - YOLOE bỏ sót xe ba bánh thật (img_004, img_017: tôi vẽ thêm mỗi ảnh 1), và box lỏng không ôm hết tuk-tuk (img_013).
+  - Khớp với `r04` ở Part 2 (3/8 box pilot là xe 4 bánh): prompt "tuk-tuk / cyclo / cargo tricycle" ở ngưỡng 0.15 đổi recall lấy precision.
+- **So với gold:** máy đạt precision 48/72 = 66.7% (KTC 95%: 55–76%) và recall 48/62 = 77.4% (KTC 95%: 66–86%). Mẫu số recall là 62 đối tượng gold.
+  - **Mâu thuẫn quan trọng:** recall 77% nghĩa là máy sót khoảng 1/4 vật, nhưng trên batch tôi chỉ vẽ thêm 8/607 = 1.3%. Lô batch khó có thể tốt hơn gold nhiều đến vậy. Phần lớn chênh lệch là **vật máy sót mà tôi cũng sót**: `added` thấp vì tôi duyệt theo box có sẵn, không phải vì máy không sót. Số gold lại lạc quan (ngưỡng chọn trên chính 4 ảnh này), nên khoảng cách thật có thể còn lớn hơn.
 
 ## 3. Thiên kiến tự động hóa và ảnh bẫy
 
-- Bắt bẫy: <<.../12>>; loại nào lọt: <<>>; vì sao (bạn đã bỏ bước nào của checklist)? <<>>
-- Accepted cao mà bắt bẫy thấp (hoặc ngược lại) nói gì về cách bạn duyệt? <<>>
+- **Bắt bẫy lượt đầu: 1/12 = 8.3%** (KTC 95%: 1–35%; ngưỡng đạt 10/12). Đây là số đo việc duyệt của tôi.
+  - Chỉ bắt được 1 bẫy: img_021, box `car` lỏng.
+  - **missing lọt 3/3** (img_005 person, img_023 three_wheeler, img_024 bus).
+  - **extra lọt 3/3** (img_009 truck, img_018 motorbike, img_025 truck).
+  - **wrong_class lọt 3/3** (img_013, img_022, img_026, cả ba đều là box bị đổi thành `bicycle`).
+  - **loose lọt 2/3** (img_027, img_033).
+- **Bước checklist đã bỏ:**
+  - **Bước 0 (ẩn nhãn máy, quét trước):** chỉ làm ở 5/24 ảnh (003, 004, 005, 009, 013). Ở 19 ảnh còn lại tôi nhìn nhãn máy ngay, nên không thể thấy vật không có box. Cả 3 bẫy missing đều lọt, kể cả img_023 nơi vật bị bỏ là một chiếc tuk-tuk chiếm gần nửa ảnh. Ở img_005 tôi có quét trước nhưng không ghi số đếm, nên vẫn không có gì để đối chiếu.
+  - **Bước 3 (sai lớp):** tôi chỉ soi lớp của xe ba bánh, lỗi đã biết từ Part 2, mà không đọc nhãn từng box. Cả 3 box `bicycle` sai đều lọt, kể cả ở img_013, ảnh tôi đã quay lại kiểm riêng chiếc tuk-tuk.
+  - **Bước 2 (thừa):** các box `truck` ma to nằm trên nền (img_009, img_025) bị bỏ qua. Mắt tôi chỉ tìm lỗi ở chỗ có xe, không hỏi "box này có vật không".
+  - **Mệt mỏi:** làm liền 24 ảnh, 0 lần nghỉ. 8/24 ảnh tôi không sửa box nào (003, 005, 008, 023, 025, 026, 028, 033), và 5 trong 8 ảnh đó có bẫy lọt.
+- **Accepted cao mà bắt bẫy thấp:** accepted 96% không chứng minh máy tốt. Tôi giữ nguyên gần như mọi box, kể cả 11/12 lỗi đã biết chắc là sai. Đây đúng là thiên kiến tự động hóa: nhãn máy trông hợp lý nên tôi "làm theo" (lọt wrong_class, extra) và "bỏ qua" chỗ không có box (lọt missing).
+- **Sau lượt đầu:** sau khi export, tôi mở `traps_key.json` (đúng thời điểm hướng dẫn cho phép) để sửa lại các bẫy lọt trong nhãn cuối. `review_stats.md` hiện ghi 8/12, nhưng số này **không đo người duyệt**, vì đã biết ảnh và loại lỗi; số đo việc duyệt là 1/12 ở trên.
+  - **img_023:** tôi vẽ 2 box `three_wheeler` cho 2 chiếc tuk-tuk riêng. Box gốc của máy (215,112)–(799,646) gộp 2 xe thành một, tức box gốc sai. Script vẫn chấm "lọt" vì so với box gốc (IoU 0.40 / 0.28); tôi giữ nhãn của mình vì đúng guideline hơn.
+  - **Nhãn cuối còn 3 lỗi đã biết, chưa sửa:** thiếu 1 `person` (img_005), thiếu 1 `bus` (img_024), thừa 1 `motorbike` ma (img_018). Ba lỗi này được tính vào quyết định ở mục 7.
 
 ## 4. Máy có đáng dùng không?
 
-- Thời gian (từ `time_log.csv`): gán tay <<... phút/ảnh>> vs duyệt <<... phút/ảnh>>. Thiên lệch (bạn gán gold trước nên đã quen cảnh): <<>>
-- Kết luận: <<có / không / chỉ cho lớp nào>>, dựa trên <<số liệu>>
-- **Ba quy tắc giảm thiên kiến của bạn** (mỗi quy tắc kiểm tra được bằng số hoặc việc làm):
-  1. <<>>
-  2. <<>>
-  3. <<>>
+- **Thời gian (`time_log.csv`):** gán tay 34 phút / 4 ảnh = 8.5 phút/ảnh; duyệt 90 phút / 24 ảnh = 3.75 phút/ảnh, tức nhanh hơn khoảng 56%. Cả hai số đều tính cả thời gian hỏi đáp trong lúc làm.
+  - **Thiên lệch:** gold được gán trước nên khi duyệt tôi đã quen kiểu cảnh và bộ nhãn.
+  - **Thiên lệch lớn hơn:** 3.75 phút/ảnh là tốc độ của một lượt duyệt **bỏ Bước 0 ở 19/24 ảnh và lọt 11/12 bẫy**. Phần "tiết kiệm" có một phần đến từ việc bỏ kiểm tra, không phải từ máy. Thêm khoảng 15 phút sửa lại thì vẫn khoảng 4.4 phút/ảnh, còn nhanh hơn gán tay khoảng 48%.
+- **Kết luận: có, kèm điều kiện.**
+  - Dùng pre-label cho `person`, `motorbike`, `car`: accepted cao, deleted thấp (person 2/270, motorbike 7/238, car 0/54).
+  - `three_wheeler` và lớp hiếm (`bicycle`, `truck`, `bus`) phải kiểm từng box: three_wheeler bị xoá 22%, và các bẫy sai lớp đều rơi vào `bicycle`.
+  - Máy chỉ đáng dùng nếu người duyệt giữ được Bước 0: với recall máy 77% trên gold, bỏ Bước 0 nghĩa là chấp nhận sót khoảng 1/4 số vật.
+- **Ba quy tắc giảm thiên kiến của tôi:**
+  1. **Đếm trước ở 24/24 ảnh:** ẩn nhãn máy và ghi số đếm theo lớp vào sổ ghi chú **trước** khi hiện box, ở 100% ảnh (lượt này chỉ 5/24). Kiểm tra: số dòng trong sổ có số đếm = số ảnh của lô.
+  2. **Đọc nhãn từng box ở lớp hiếm:** ở mọi ảnh, dùng Filters lọc riêng `bicycle`, `truck`, `bus`, `three_wheeler`, bấm từng box và đối chiếu lớp với vật thật (lượt này lọt 3/3 wrong_class, đều là `bicycle`, và 2 box `truck` ma). Kiểm tra: 24/24 dòng trong sổ có ghi "đã lọc lớp hiếm".
+  3. **Ảnh không sửa gì phải quét lại:** ảnh nào không sửa box nào thì quét lại lần hai theo 4 góc phần tư trước khi sang ảnh sau (lượt này 8/24 ảnh không sửa gì, 5 trong đó có bẫy lọt). Kiểm tra: mọi ảnh "0 sửa" trong sổ có ghi "đã quét lại 4 góc".
 
 ## 5. Mask SAM cho 3 vật (Part 5)
 
