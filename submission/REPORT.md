@@ -13,7 +13,11 @@
 | three_wheeler | YOLOE-26s-seg, prompt: "tuk-tuk", "cyclo", "cargo tricycle" | **0.15** | `threshold_sweep`: ở 0.15 bắt 7/7 xe ba bánh gold (recall 100%, precision 78%); lên 0.3 sót 2/7. YOLO26 không có lớp này, không lần nào ra three_wheeler (`r02`); YOLOE pilot đúng 5/8 box (`r04`) |
 
 - Chuỗi ngưỡng dùng ở Part 4: `--thr "motorbike=0.1,three_wheeler=0.15"` (lớp khác dùng `--conf 0.3`)
-- Lệnh `merge_prelabels.py` đã dùng (dán nguyên): <<>>
+- Lệnh `merge_prelabels.py` đã dùng (dán nguyên):
+  ```
+  python scripts/merge_prelabels.py work/prelabel/yoloe_all/pre.coco.json work/prelabel/y26_all/pre.coco.json --thr "motorbike=0.1,three_wheeler=0.15" --conf 0.3 --iou 0.6 --split "batch,gold" --out work/prelabel/merged_review/pre.coco.json
+  ```
+  Kết quả: 726 box cho 28 ảnh (24 batch + 4 gold): person 311, motorbike 274, car 65, three_wheeler 52, bicycle 13, truck 7, bus 4. Box YOLO26 bị loại vì chồng lên box YOLOE ưu tiên cao hơn (IoU ≥ 0.6): car 11, truck 6, motorbike 2, bus 2, bicycle 1 (đúng kiểu xe ba bánh bị YOLO26 gọi car/truck ở Part 2).
 - **Phiên bản SAM bạn chọn:** SAM 2.1 base (`sam2.1_b.pt`) — bản bài khuyến nghị, chạy được trên CPU (4.45 s/ảnh, `r05`), máy RAM 15.5 GB đủ chạy; không dùng SAM 3 vì cần quyền truy cập và GPU. Mask từ box máy có lỗi (dính người ngồi trên xe, lệch/thủng ở tuk-tuk img_013, box sai thì mask sai theo) nên Part 5 dùng click điểm.
 - Lỗi **không sửa được bằng đổi ngưỡng**:
   - Sai lớp xe ba bánh: img_032 xích lô bị YOLO26 gọi bicycle; img_013 tuk-tuk bị gọi car; nâng ngưỡng 0.25 → 0.5 (`r02` → `r03`) thì img_032 vẫn sai lớp, img_007 xích lô chỉ đổi từ sai lớp (motorbike) thành mất box. Sửa bằng model khác: YOLOE cho three_wheeler.
