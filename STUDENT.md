@@ -5,7 +5,7 @@
 - Lớp (L2 / L3 / khác): L2
 - Tài khoản GitHub: Trintrin0408
 - Repo bài nộp (URL): https://github.com/Trintrin0408/K5-L23-Day08-VuTuyettrinh-2A202603164-AI-Assisted-Labeling
-- Commit chốt bài (hash): <<>>
+- Commit chốt bài (hash): e5a551e
 - Máy: Windows 11 Pro, RAM 15.5 GB, không có GPU (chạy CPU, torch 2.15.0+cpu)
 - CVAT (Docker): v2.81.0
 
