@@ -98,20 +98,56 @@ Trong deleted + added có 4 ca đổi lớp (box đúng chỗ, sai lớp), nên 
 
 ## 6. Calibration (Part 6)
 
-- Số quyết định: <<>> (`calibration_decisions.csv`); quan trọng nhất (dẫn `CAL-xx`): <<>>
-- Quy tắc mới đã vào `guideline_v1.1_calibrated.md`: <<>>
-- Nguyên nhân gốc: <<guideline mơ hồ / chưa nắm quy tắc / máy>>
+- **Số quyết định:** 6 (`calibration_decisions.csv`): 2 `loi_may`, 2 `cau_hoi_mo`, 1 `bay_lot`, 1 `can_review`.
+- **Quan trọng nhất: CAL-03** (mask / box xe có gồm người không). Part 5 cho thấy SAM 2.1 mặc định tô cả người lái, khách vào mask xe (img_013, img_023), mà v1.0 mục 4.2 không có quy tắc nào. Không chốt thì hai người làm mask sẽ ra hai kiểu khác nhau.
+- **Quy tắc mới đã vào `guideline_v1.1_calibrated.md`:**
+  - 4.2.5: mask xe không gồm người.
+  - 4.1.8: xe đỗ sát thì mỗi xe một box (CAL-02, img_023).
+  - Mục 2: minivan ≤ 9 chỗ là `car`, minibus 12–16 chỗ là `bus` (CAL-04, img_024).
+  - 4.1.6: ngoại lệ vật nhỏ riêng lẻ nhận rõ lớp (CAL-05, img_020) và ngưỡng `ignore_region` theo chiều cao vật (CAL-06, img_005 / img_028).
+  - 4.3: bước kiểm box `three_wheeler` của máy (CAL-01).
+  - Câu hỏi mở 1, 3, 5, 6, 7 **chưa chốt** vì lô này không có ca ví dụ rõ.
+- **Nguyên nhân gốc, tách hai loại:**
+  - **Guideline mơ hồ** (phải sửa chữ): CAL-03, 04, 05, 06. Ví dụ v1.0 ghi `car` gồm "minivan" nhưng `bus` gồm "minibus", nên xe 16 chỗ ở img_024 rơi vào giữa hai lớp.
+  - **Máy sai** (guideline đã rõ, chỉ thêm bước kiểm): CAL-01 (YOLOE gán `three_wheeler` thừa, 9/41 bị xoá), CAL-02 (gộp 2 tuk-tuk làm 1 box).
+  - **Lỗi của tôi** (không đổi guideline): bẫy lọt ở mục 3 và box lệch ở mục 7 là do tôi không theo checklist, không phải do quy tắc thiếu.
 
 ## 7. QC và quyết định (Part 6)
 
-- Mẫu: <<n>> ảnh (<<m>> ảnh `can_review` + <<k>> ngẫu nhiên, seed 42); người kiểm: bạn (**hạn chế**: bạn vừa là người duyệt).
-- Lỗi theo **đối tượng**: <<.../... = ...%>> · theo **ảnh**: <<.../... = ...%>> (ngưỡng Release ≤ 2%)
-- Top lỗi (trong: bỏ sót, thừa, sai lớp, sai vị trí/kích thước, sai thuộc tính, sai mask) + một ảnh ví dụ mỗi loại: <<>>
-- **Giới hạn mẫu nhỏ** (cận trên 95% trong `qc_report_auto.md`): <<>>
-- Script kiểm được / không kiểm được (ví dụ ôm sát, cùng bỏ sót với máy, theo checklist thật): <<>>
+- **Mẫu:** 5 ảnh (img_003, img_006, img_014, img_031, img_035), 120 đối tượng. Gồm 0 ảnh `can_review` (batch không có box nào được tick) và 5 ảnh ngẫu nhiên, seed 42.
+  - Người kiểm là tôi (**hạn chế**: tôi vừa là người duyệt, nên dễ lặp lại đúng điểm mù của mình).
+  - 3 ảnh mang lỗi đã biết (img_005, img_018, img_024; mục 3) **không rơi vào mẫu**, nên mẫu không phản ánh chúng.
+- **Lỗi theo đối tượng:** 13/120 = 10.8%. **Lỗi theo ảnh:** 5/5 = 100% (ngưỡng Release ≤ 2%).
+  - Với các ô tôi ghi "2 trở lên" (img_006 bỏ sót và thừa, img_014 và img_035 lệch), `qc_review.csv` chỉ tính 2, nên **13 là cận dưới**.
+- **Top lỗi:**
+  - **Sai vị trí / kích thước: 7/13** (img_003, img_006, img_014, img_031, img_035). Đây là lỗi hệ thống, có mặt ở cả 5 ảnh. Khớp với mục 3: lúc review tôi gần như không làm bước 4 (lọt 2/3 bẫy `loose`; img_013 chỉ phát hiện box tuk-tuk lỏng khi được hỏi lại).
+  - **Bỏ sót: 4/13** (img_003, img_006). img_003 là ảnh tôi giữ nguyên 27/27 box khi review.
+  - **Thừa: 2/13** (img_006).
+  - Không thấy sai lớp, sai thuộc tính, sai mask trong mẫu.
+- **Giới hạn mẫu nhỏ:**
+  - 5/5 ảnh lỗi cho cận trên 95% (Wilson) là 100%; cận dưới cũng khoảng 57%. Kết luận "lô không đạt 2%" là chắc chắn, dù mẫu nhỏ.
+  - Ngược lại, kể cả khi mẫu 5 ảnh ra 0 lỗi thì cũng **không chứng minh được** ≤ 2%: theo quy tắc 3/n, lỗi thật vẫn có thể tới khoảng 60%.
+  - Mẫu cũng chỉ là 5/24 ảnh, do chính người duyệt kiểm.
+- **Script kiểm được / không kiểm được:**
+  - **Kiểm được:** định dạng, lớp hợp lệ, đủ 24 ảnh, các số accepted / added, bắt bẫy, và đếm lỗi theo phiếu kiểm.
+  - **Không kiểm được:**
+    - Box có ôm sát không: 7 lỗi lệch chỉ thấy bằng mắt.
+    - Vật mà cả máy lẫn tôi cùng sót: recall máy trên gold 77% nhưng added chỉ 1.3%.
+    - Tôi có theo checklist thật không: chỉ biết từ sổ ghi chú, Bước 0 ở 5/24 ảnh.
+  - Số bắt bẫy trong `qc_report_auto.md` (8/12) là số **sau khi sửa lại**; số đo việc duyệt là 1/12 (mục 3).
 
-**Quyết định: <<Release / Hold / Rework>>**, ngày <<YYYY-MM-DD>>. Lý do (đi theo Hold → Rework → Release): <<>>
-Nếu Rework / Hold, việc cần làm tiếp: <<>>
+**Quyết định: Rework**, ngày 2026-11-18. Lý do, đi theo cây Hold → Rework → Release:
+1. **Không Hold.** Guideline đã chốt các ca gặp trong lô (v1.1, CAL-01…06); 5 câu hỏi còn mở không có ca nào trong 24 ảnh; dữ liệu không hỏng.
+2. **Rework**, vì 3 điều kiện cùng đúng:
+   - ảnh lỗi 5/5 = 100% > 2%;
+   - lỗi hệ thống "sai vị trí / kích thước" chiếm 7/13 lỗi;
+   - bắt bẫy lượt duyệt đầu 1/12 = 8.3% < 80%, nên lô duyệt chưa đáng tin.
+3. **Không thể Release.**
+
+**Việc cần làm tiếp:**
+1. Duyệt lại cả 24 ảnh theo 3 quy tắc ở mục 4: đếm trước 24/24, lọc từng lớp hiếm, quét lại ảnh 0 sửa. Thêm **bước 4 bắt buộc**: bấm từng box xem 4 cạnh.
+2. Sửa 3 lỗi đã biết: thêm `person` img_005, thêm `bus` img_024, xoá `motorbike` ma img_018.
+3. Export `qc_fixed.json`, chạy lại `build_release.py` và `qc_sample.py --force`, QC vòng 2 với mẫu lớn hơn (≥ 10 ảnh). Nếu được, nhờ người khác kiểm.
 
 ## 8. Ghi chú cá nhân
 
@@ -119,9 +155,22 @@ Nếu Rework / Hold, việc cần làm tiếp: <<>>
   - `img_020` box #55, #56 (`person`, cao 13.7 px và 14.4 px): người nhỏ hơn 20 px, chỉ lộ phần đầu nhưng nhìn thấy rõ. Phân vân giữa quy tắc 4.1.6 (cao < 20 px thì không vẽ, chỉ dùng `ignore_region` khi cụm ≥ 5 vật) và việc vật vẫn nhận ra rõ ràng là người; chỉ có 2 người nên không đủ thành cụm.
   - `img_001` box #12 (`person`, cao 25 px): không chắc là người, chỉ thấy một bóng đen.
 
-- **Dùng AI để làm bài** (công cụ nào, việc gì, kiểm tra thế nào; "không dùng" nếu không): <<>>
-- Gold có bị nhiễm không (bạn có nhìn pre-label hay hỏi AI trước khi gán xong)? <<không / có, như sau: ...>>
-- Máy / GPU / CVAT dùng; vướng mắc cài đặt: <<>>
-- Dùng cache `data/cache/` thay vì tự chạy? <<không / có, vì ...>>
-- Lỗi / bug script đã gặp (nếu có): <<>>
-- Một điều bạn làm khác lần sau: <<>>
+- **Dùng AI để làm bài: có, Claude Code (Claude Opus 5.5) trong VS Code**, từ Part 4 trở đi.
+  - **Việc AI làm:**
+    - Hướng dẫn từng bước (lệnh chạy, thao tác CVAT) và hỏi tôi từng ảnh khi review; ghi sổ ghi chú review từ câu trả lời của tôi.
+    - **Sau khi tôi export `batch_reviewed.json` lượt đầu:** đọc `traps_key.json` và vẽ vị trí các bẫy lọt lên ảnh để tôi sửa lại trong CVAT. Vì vậy số 8/12 không đo người duyệt (mục 3).
+    - Chọn toạ độ click cho SAM ở Part 5.
+    - Soạn nháp `calibration_decisions.csv`, `guideline_v1.1_calibrated.md` và REPORT mục 2–7 từ số liệu script và câu trả lời của tôi.
+    - Ghi `qc_review.csv` theo lỗi tôi đếm khi nhìn ảnh QC.
+  - **Việc tôi tự làm:**
+    - Gán gold (Part 1), duyệt và sửa box trong CVAT (Part 4), nhìn mask (Part 5) và ảnh QC.
+    - Chọn các quyết định calibration (CAL-04 xe van, CAL-05 người nhỏ), chọn 3 quy tắc giảm thiên kiến và kết luận mục 4.
+  - **Cách kiểm tra:**
+    - Mọi con số lấy từ output script (`review_stats`, `qc_report`), không sửa tay.
+    - Tôi đọc lại REPORT và guideline đối chiếu với điều mình đã làm.
+    - Mask và ảnh QC tôi tự nhìn; AI chỉ chép lại.
+- **Gold có bị nhiễm không:** không. 4 ảnh gold gán tay ở Part 1, trước khi chạy model và trước khi dùng AI; tôi không xem pre-label hay hỏi AI trước khi gán xong.
+- **Máy / CVAT:** Windows 11 Pro, RAM 15.5 GB, không GPU (torch CPU); CVAT v2.81.0 qua Docker. Không vướng cài đặt đáng kể; chỉ chậm trên CPU (SAM 2.1 khoảng 4.45 s/ảnh).
+- **Dùng cache `data/cache/`?** Không; tôi tự chạy `prelabel.py --split all --conf 0.05` cho YOLO26 và YOLOE.
+- **Lỗi / bug script:** không gặp.
+- **Một điều làm khác lần sau:** kiểm **từng cạnh box**, tức bấm vào từng box và xem 4 cạnh có ôm sát không. Lý do: QC cho thấy 7/13 lỗi là box lệch / lỏng, có mặt ở cả 5 ảnh mẫu, và lúc review tôi gần như bỏ bước 4 (lọt 2/3 bẫy `loose`).

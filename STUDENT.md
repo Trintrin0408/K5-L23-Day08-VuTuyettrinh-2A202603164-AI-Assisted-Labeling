@@ -11,9 +11,9 @@
 
 ## Kết quả tóm tắt (điền cuối bài; số lấy từ `submission/qc/*`, kèm mẫu số)
 
-- Máy: accepted / edited / deleted: <<... / ... / ... (mẫu số: ... box máy)>>; added: <<... (mẫu số: ... đối tượng)>>
-- So với gold: precision / recall của **máy** <<... / ...>>
-- Bắt bẫy: <<.../12 = ...%>>
-- Thời gian: gán tay <<... phút/ảnh>>; duyệt có pre-label <<... phút/ảnh>>
-- Lỗi QC: <<...% theo ảnh (.../...)>>, <<...% theo đối tượng (.../...)>>
-- **Quyết định:** <<Release / Hold / Rework>> — lý do một dòng: <<...>>
+- Máy: accepted / edited / deleted: 593/621 = 95.5% / 6/621 = 1.0% / 20/621 = 3.2% (mẫu số: 621 box máy); added: 8/607 = 1.3% (mẫu số: 607 đối tượng sau duyệt)
+- So với gold: precision / recall của **máy** 48/72 = 66.7% / 48/62 = 77.4% (62 đối tượng gold, 4 ảnh; lạc quan vì chọn ngưỡng trên chính gold)
+- Bắt bẫy: lượt duyệt đầu 1/12 = 8.3% (số đo người duyệt); sau khi export, mở `traps_key.json` và sửa lại thì còn 8/12 = 66.7% (không đo người duyệt, xem REPORT mục 3)
+- Thời gian: gán tay 8.5 phút/ảnh (34 phút / 4 ảnh); duyệt có pre-label 3.75 phút/ảnh (90 phút / 24 ảnh)
+- Lỗi QC: 100% theo ảnh (5/5), 10.8% theo đối tượng (13/120, cận dưới)
+- **Quyết định:** Rework — lý do một dòng: ảnh lỗi 5/5 > 2%, lỗi hệ thống box lệch 7/13, bắt bẫy lượt đầu 1/12 < 80%
