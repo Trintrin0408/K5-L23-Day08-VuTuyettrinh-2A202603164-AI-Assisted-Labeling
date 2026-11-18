@@ -82,10 +82,19 @@ Trong deleted + added có 4 ca đổi lớp (box đúng chỗ, sai lớp), nên 
 
 | Ảnh | SAM (phiên bản) | Số click | Mask gồm người lái / hàng hoá? | Lỗi quan sát | File trong `masks/` |
 |---|---|---|---|---|---|
-| <<img_0xx>> | <<>> | <<>> | <<>> | <<>> | <<>> |
+| img_013 (tuk-tuk, có người lái) | SAM 2.1 base (`sam2.1_b.pt`) | 3 (2 dương: thân `400,480`, mui `600,110`; 1 âm: người lái `720,300`) | **Có, một phần.** Click âm chỉ bỏ được vùng áo quanh điểm click; chân, quần và tay người lái vẫn bị tô | Mask phủ đủ mui, thân, bánh, không tràn ra đường. Nhưng **tô cả nền nhìn xuyên qua khung xe** (người ngồi phía sau, ghế), là các lỗ lớn mà guideline 4.2.2 nói phải bỏ ra | `tuktuk_img013.jpg` |
+| img_032 (xích lô phủ chăn hoa) | SAM 2.1 base | 3 (2 dương: ghế `450,340`, khung trước `380,450`; 1 âm: người đứng cạnh `585,330`) | Không dính người đứng cạnh; xe không có người ngồi | Mask bám viền tốt nhất trong 3 vật (cả chăn, 2 bánh trước, khung). **Không đủ xe** vì đuôi xe (yên người đạp, bánh sau) bị người đứng che: đây là do khuất, không phải lỗi SAM, và đúng 4.2.1 (chỉ phần nhìn thấy) | `xichlo_img032.jpg` |
+| img_023 (tuk-tuk giữa, có khách) | SAM 2.1 base | 2 (2 dương: mui `620,215`, thân `560,400`; **không** click âm, cố ý) | **Có: tô luôn người khách ngồi trong xe** | Tách đúng chiếc ở giữa, **không tràn sang 2 tuk-tuk đứng sát** (chỗ máy từng gộp 2 xe làm 1 box, xem mục 3). Phần thân bị người đứng che không được tô | `tuktuk_img023.jpg` |
 
-- Đối chiếu guideline mục 4.2: quy tắc nào giúp, quy tắc nào thiếu? <<>>
-- *(Tuỳ chọn)* Interactor SAM trong CVAT: làm được / không (lỗi gì, đã thử gì); khác gì offline: <<>>
+- **Đối chiếu guideline mục 4.2:**
+  - **Quy tắc giúp được:** 4.2.1 (bám phần nhìn thấy) giải thích vì sao xích lô img_032 và tuk-tuk img_023 "thiếu" đúng phần bị che. 4.2.4 (hai vật chạm nhau thì mỗi vật một polygon) được SAM làm đúng ở img_023.
+  - **Quy tắc thiếu:** 4.2 **không nói mask xe có gồm người lái / khách / hàng hoá hay không**. Mặc định SAM coi "xe + người trên xe" là một vật (img_023, 2 click dương thì lấy cả khách). Muốn loại người phải thêm click âm, mà 1 click âm vẫn chưa đủ (img_013). Đề xuất đưa vào v1.1: "mask xe **không** gồm người; người có mask riêng; vùng chồng nhau thuộc người (ở phía trước)". Ca này vào `calibration_decisions.csv`.
+  - 4.2.2 (lỗ lớn bỏ ra) không được SAM tự làm: img_013 tô cả nền xuyên qua khung xe, phải sửa tay hoặc thêm click âm vào từng lỗ.
+- **Quy tắc / lỗi rút ra:**
+  1. Mỗi người ngồi trên xe cần ít nhất 1 click âm (thân và chân là 2 vùng riêng); kiểm lại mask trước khi nhận.
+  2. Với xe có khung hở (tuk-tuk, xích lô), thêm click âm vào các lỗ lớn nhìn xuyên ra nền.
+  3. Mask đẹp không sửa được lớp sai: lớp vẫn phải kiểm riêng (ở `r05`, mask tuk-tuk img_013 từ box YOLO26 mang lớp `car`). Ở đây lớp do tôi chọn khi click.
+- *(Tuỳ chọn)* Interactor SAM trong CVAT: không thử (chỉ dùng `sam2_points.py` offline).
 
 ## 6. Calibration (Part 6)
 
